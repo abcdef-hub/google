@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Custom Google Search</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #fff;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+body.results-shown {
+  justify-content: flex-start;
+  padding-top: 40px;
+}
+
+    .welcome {
+  font-size: 2rem;
+  font-weight: lighter;
+  color: #F36D21;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  animation: typing 3s steps(30) forwards, blink-caret 0.75s step-end infinite;
+  margin: 1px auto;
+  text-align: center;
+  padding-bottom: 10px;
+}
+
+.welcome.hidden {
+  visibility: hidden; 
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-caret {
+  50% {
+    border-color: transparent;
+  }
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 30px;
+  transition: all 0.3s ease;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 48px 12px 16px;
+  padding-left: 45px;
+  border: 1px solid #dfe1e5;
+  border-radius: 24px;
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.search-button {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  height: 24px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-button svg {
+  fill: #3c4043;
+  width: 24px;
+  height: 24px;
+  stroke: #3c4043;
+  stroke-width: 2;
+}
+
+.search-button:hover svg {
+  fill: orangered;
+  stroke: orangered;
+}
+
+
+    .results {
+      width: 90%;
+      max-width: 700px;
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-item {
+      background: #f1f3f4;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: background 0.3s ease;
+    }
+
+    .result-item:hover {
+      background: #e0e0e0;
+    }
+
+    .result-item a {
+      text-decoration: none;
+      color: #1a0dab;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .result-item p {
+      margin: 5px 0 0;
+      color: #4d5156;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="welcomeText" class="welcome">Welcome to search engine</div>
+
+  <form id="searchForm" class="search-container">
+    <button type="submit" class="search-button" aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7" fill="none" stroke-width="2"/>
+          <line x1="16.65" y1="16.65" x2="21" y2="21" stroke-width="2"/>
+        </svg>
+      </button>
+    <input type="text" id="query" name="q" class="search-input" placeholder="Please search here" />
+    
+  </form>
+
+  <div id="results" class="results"></div>
+
+  <script>
+    const form = document.getElementById('searchForm');
+    const queryInput = document.getElementById('query');
+    const resultsDiv = document.getElementById('results');
+    const welcomeText = document.getElementById('welcomeText');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = queryInput.value.trim();
+      if (!query) return;
+
+      welcomeText.classList.add('hidden');
+      resultsDiv.style.display = 'block';
+      document.body.classList.add('results-shown');
+
+      const apiKey = 'AIzaSyB9lXZFoRjwQjDy7XjaDEunjgGP5xdY2kI';
+      const cx = '87c9bf4e8d41b45c7';
+      const apiUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        resultsDiv.innerHTML = '';
+
+        if (data.items && data.items.length > 0) {
+          data.items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.innerHTML = `
+              <a href="${item.link}" target="_blank">${item.title}</a>
+              <p>${item.snippet}</p>
+            `;
+            resultsDiv.appendChild(div);
+          });
+        } else {
+          resultsDiv.innerHTML = '<p>No results found.</p>';
+        }
+
+      } catch (error) {
+        console.error('Fetch error:', error);
+        resultsDiv.innerHTML = '<p>Error fetching results.</p>';
+      }
+    });
+  </script>
+
+</body>
+</html>
